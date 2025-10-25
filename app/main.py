@@ -1,27 +1,23 @@
-from typing import Union
-
+import uvicorn
 from fastapi import FastAPI
-from pydantic import BaseModel
+
+from imap_client import EmailListener
+from core import Config
 
 app = FastAPI()
 
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
-
-
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def home():
+    return {"message": "FastAPI server running with IMAP listener"}
 
+@app.on_event("startup")
+def startup_event():
+    print("Starting IMAP email listener...")
+    print("Running in:", Config.ENV)
+    print("Debug mode:", Config.DEBUG)
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    listener = EmailListener(Config.HOST, Config.USERNAME, Config.APP_PASSWORD)
+    listener.start()
 
-
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
