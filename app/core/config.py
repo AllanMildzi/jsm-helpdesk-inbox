@@ -7,7 +7,10 @@ env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path, override=False)
 
 class Config:
-    HOST = os.getenv("HOST")
+    SERVER_HOST = os.getenv("SERVER_HOST")
+    SERVER_PORT = int(os.getenv("SERVER_PORT"))
+    
+    IMAP_HOST = os.getenv("IMAP_HOST")
     USERNAME = os.getenv("USERNAME")
     APP_PASSWORD = os.getenv("APP_PASSWORD")
 
@@ -18,7 +21,7 @@ class Config:
     TOKEN_PATH = BASE_DIR / "token.json"
     SCOPES = ["https://mail.google.com/"]
 
-    REQUIRED_VARS = ["HOST", "USERNAME", "APP_PASSWORD"]
+    REQUIRED_VARS = ["SERVER_HOST", "SERVER_PORT", "IMAP_HOST", "USERNAME", "APP_PASSWORD"]
 
     @classmethod
     def validate(cls):

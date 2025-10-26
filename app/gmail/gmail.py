@@ -43,23 +43,15 @@ class Gmail:
         except HttpError as error:
             print(f"An error occurred: {error}")
     
-    def search_messages(self, service, query):
+    def search_messages(self, service, max_results, query):
         result = service.users().messages().list(userId='me', 
-                                                 q=query
+                                                 maxResults=max_results,
+                                                 q=query,
                                                  ).execute()
         messages = []
         
         if 'messages' in result:
             messages.extend(result['messages'])
-        
-        while 'nextPageToken' in result:
-            page_token = result['nextPageToken']
-            result = service.users().messages().list(userId='me', 
-                                                     q=query, 
-                                                     pageToken=page_token
-                                                     ).execute()
-            if 'messages' in result:
-                messages.extend(result['messages'])
         
         return messages
     
