@@ -4,6 +4,10 @@ import queue
 
 from core.constants import *
 from gmail import Gmail
+from graphs.builder import build_graph
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 class EmailListener:
     def __init__(self, host, username, password):
@@ -18,13 +22,11 @@ class EmailListener:
         self.message_queue = queue.Queue(maxsize=QUEUE_MAX_LENGTH)
         self.consumer_threads = []
 
-        self.gmail = None
-
     def _imap_listener(self):
-        print("IMAP IDLE listening for new mail.")
+        logger.info("IMAP IDLE listening for new mail.")
 
         # Gmail authentication
-        service = self.gmail.authenticate()
+        service = Gmail.authenticate()
 
         self._start_consumers()
         self.running = True
@@ -32,13 +34,13 @@ class EmailListener:
         while self.running:
             try:
                 if not self.message_queue.full():
-                    results = self.gmail.search_messages(service, 
-                                                         QUEUE_MAX_LENGTH - self.message_queue.qsize(), 
-                                                         SEARCH_QUERY)
+                    results = Gmail.search_messages(service, 
+                                                    QUEUE_MAX_LENGTH - self.message_queue.qsize(), 
+                                                    SEARCH_QUERY)
                 
                     if results:
-                        #gmail.mark_as_read(service, results)
-                        print(f"Found {len(results)} results.")
+                        logger.debug(f"Found {len(results)} results.")
+                        Gmail.mark_as_read(service, results)
 
                         for msg in results:
                             try:
@@ -47,14 +49,14 @@ class EmailListener:
                                 break
                     
                     else:
-                        print("Server sent nothing")
+                        logger.debug("Server sent nothing")
                 else:
-                    print("Queue is full")
+                    logger.debug("Queue is full")
 
                 time.sleep(CHECK_INTERVAL)
             
             except Exception as e:
-                print(f"IMAP error: {e}. Retrying in 10s.")
+                logger.exception(f"IMAP error: {e}. Retrying in 10s.")
                 time.sleep(RETRYING_TIME)
             
         self.running = False
@@ -66,10 +68,10 @@ class EmailListener:
             self.consumer_threads.append(consumer_thread)
 
     def _email_consumer(self):
-        while not self.running or self.gmail is None:
+        while not self.running:
             time.sleep(INIT_WAIT_TIME)
 
-        service = self.gmail.authenticate()
+        service = Gmail.authenticate()
 
         while self.running:
             try:
@@ -79,8 +81,10 @@ class EmailListener:
 
             try:
                 # Reading email + LLM + Ticket creation logics here
-                print(self.gmail.read_message(service, message))
-                time.sleep(5)
+                message_object = Gmail.read_message(service, message)
+
+                graph = build_graph()
+                graph.invoke({"email": message_object})
             
             except Exception as e:
                 print(f"Error in consumer thread: {e}")
@@ -89,7 +93,16 @@ class EmailListener:
 
     def start(self):
         # Start IMAP listener in a background thread.
-        self.gmail = Gmail()
         thread = threading.Thread(target=self._imap_listener, daemon=True)
         thread.start()
         print("EmailListener started")
+    
+    def stop(self):
+        # Stop IMAP listener
+        print("Stopping EmailListener")
+        
+        self.running = False
+        self.message_queue.join()
+
+        time.sleep(INIT_WAIT_TIME)
+        print("EmailListener stopped.")

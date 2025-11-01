@@ -9,32 +9,31 @@ from core import Config
 from models.message import Message
 
 class Gmail:
-    def __init__(self):
-        self.TOKEN_PATH = Config.TOKEN_PATH
-        self.CREDENTIALS_PATH = Config.CREDENTIALS_PATH
-        self.SCOPES = Config.SCOPES
-
-    def authenticate(self):
+    def authenticate():
+        TOKEN_PATH = Config.TOKEN_PATH
+        CREDENTIALS_PATH = Config.CREDENTIALS_PATH
+        SCOPES = Config.SCOPES
+        
         creds = None
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if self.TOKEN_PATH.exists():
-            creds = Credentials.from_authorized_user_file(self.TOKEN_PATH, self.SCOPES)
+        if TOKEN_PATH.exists():
+            creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
         
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                print(f"The path is : {self.CREDENTIALS_PATH}")
+                print(f"The path is : {CREDENTIALS_PATH}")
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    str(self.CREDENTIALS_PATH), self.SCOPES
+                    str(CREDENTIALS_PATH), SCOPES
                 )
                 creds = flow.run_local_server(port=0)
             
             # Save the credentials for the next run
-            with open(self.TOKEN_PATH, "w") as token:
+            with open(TOKEN_PATH, "w") as token:
                 token.write(creds.to_json())
 
         try:
@@ -43,7 +42,8 @@ class Gmail:
         except HttpError as error:
             print(f"An error occurred: {error}")
     
-    def search_messages(self, service, max_results, query):
+    @classmethod
+    def search_messages(cls, service, max_results, query):
         result = service.users().messages().list(userId='me', 
                                                  maxResults=max_results,
                                                  q=query,
@@ -55,7 +55,8 @@ class Gmail:
         
         return messages
     
-    def read_message(self, service, message):
+    @classmethod
+    def read_message(cls, service, message):
         result = service.users().messages().get(userId='me', 
                                                 id=message['id'], 
                                                 format='full'
@@ -95,7 +96,8 @@ class Gmail:
 
         return new_message
     
-    def mark_as_read(self, service, messages):
+    @classmethod
+    def mark_as_read(cls, service, messages):
         service.users().messages().batchModify(userId='me',
                                                body={
                                                    'ids': [m['id'] for m in messages],

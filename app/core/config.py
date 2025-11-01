@@ -14,6 +14,16 @@ class Config:
     USERNAME = os.getenv("USERNAME")
     APP_PASSWORD = os.getenv("APP_PASSWORD")
 
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    
+    JIRA_API_KEY = os.getenv("JIRA_API_KEY")
+    JIRA_USERNAME = os.getenv("JIRA_USERNAME")
+    JIRA_DOMAIN = os.getenv("JIRA_DOMAIN")
+
+    SERVICE_DESK_ID = os.getenv("SERVICE_DESK_ID")
+
+    SERVICE_DESK_BASE_URL = os.getenv("SERVICE_DESK_BASE_URL")
+
     DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
     ENV = os.getenv("ENV", "development")
 
@@ -21,7 +31,17 @@ class Config:
     TOKEN_PATH = BASE_DIR / "token.json"
     SCOPES = ["https://mail.google.com/"]
 
-    REQUIRED_VARS = ["SERVER_HOST", "SERVER_PORT", "IMAP_HOST", "USERNAME", "APP_PASSWORD"]
+    REQUIRED_VARS = ["SERVER_HOST", 
+                     "SERVER_PORT", 
+                     "IMAP_HOST", 
+                     "USERNAME", 
+                     "APP_PASSWORD", 
+                     "GEMINI_API_KEY", 
+                     "JIRA_API_KEY",
+                     "JIRA_USERNAME",
+                     "JIRA_DOMAIN",
+                     "SERVICE_DESK_ID",
+                     "SERVICE_DESK_BASE_URL"]
 
     @classmethod
     def validate(cls):

@@ -1,10 +1,11 @@
-class Message:
-    def __init__(self):
-        self.sender = ""
-        self.date = ""
-        self.subject = ""
-        self.text = ""
-    
+from pydantic import BaseModel, Field
+
+class Message(BaseModel):
+    sender: str = Field(default="", description="Who sent the email")
+    date: str = Field(default="", description="The date the email was sent")
+    subject: str = Field(default="", description="The subject of the email")
+    text: str = Field(default="", description="The conctent of the email")
+
     def __repr__(self):
         return f"From: {self.sender} | Date: {self.date} | Subject: {self.subject} | Text: {self.text}"
 
