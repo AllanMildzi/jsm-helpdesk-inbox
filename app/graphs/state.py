@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, List, Dict, Optional
+from email.message import EmailMessage
 
-from models.message import Message
-from models.request_field import RequestField
+from models import RequestField, RequestOutput
 
 class OverallState(BaseModel):
-    email: Optional[Message] = Field(
+    email: Optional[EmailMessage] = Field(
         default=None,
         description="Email message")
     
@@ -20,3 +20,17 @@ class OverallState(BaseModel):
     request_field_values: Optional[Dict[str, Any]] = Field(
         default=None,
         description="Extracted request fields values from the email")
+    
+    request_output: Optional[RequestOutput] = Field(
+        default=None,
+        description="Output object received after request is created")
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+class OutputState(BaseModel):
+    email: Optional[EmailMessage] = Field(
+        default=None,
+        description="Email message")
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    

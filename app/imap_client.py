@@ -84,10 +84,10 @@ class EmailListener:
                 message_object = Gmail.read_message(service, message)
 
                 graph = build_graph()
-                graph.invoke({"email": message_object})
+                graph.invoke({"email": message_object}, context={"gmail_service": service})
             
             except Exception as e:
-                print(f"Error in consumer thread: {e}")
+                logger.exception(f"Error in consumer thread: {e}")
             finally:
                 self.message_queue.task_done()
 
@@ -95,14 +95,14 @@ class EmailListener:
         # Start IMAP listener in a background thread.
         thread = threading.Thread(target=self._imap_listener, daemon=True)
         thread.start()
-        print("EmailListener started")
+        logger.info("EmailListener started")
     
     def stop(self):
         # Stop IMAP listener
-        print("Stopping EmailListener")
+        logger.info("Stopping EmailListener")
         
         self.running = False
         self.message_queue.join()
 
         time.sleep(INIT_WAIT_TIME)
-        print("EmailListener stopped.")
+        logger.info("EmailListener stopped.")

@@ -1,12 +1,15 @@
+import base64
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from base64 import urlsafe_b64decode
+from email.message import EmailMessage
 
 from core import Config
-from models.message import Message
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 class Gmail:
     def authenticate():
@@ -26,7 +29,7 @@ class Gmail:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                print(f"The path is : {CREDENTIALS_PATH}")
+                logger.debug(f"The path is : {CREDENTIALS_PATH}")
                 flow = InstalledAppFlow.from_client_secrets_file(
                     str(CREDENTIALS_PATH), SCOPES
                 )
@@ -40,7 +43,7 @@ class Gmail:
             return build("gmail", "v1", credentials=creds)
 
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.exception(f"An error occurred: {error}")
     
     @classmethod
     def search_messages(cls, service, max_results, query):
@@ -57,44 +60,50 @@ class Gmail:
     
     @classmethod
     def read_message(cls, service, message):
-        result = service.users().messages().get(userId='me', 
-                                                id=message['id'], 
-                                                format='full'
-                                                ).execute()
-        if not result:
-            return None
+        try:
+            result = service.users().messages().get(userId='me', 
+                                                    id=message['id'], 
+                                                    format='full'
+                                                    ).execute()
+            if not result:
+                return None
+            
+            input_message = EmailMessage()
+
+            payload = result["payload"]
+            headers = payload.get("headers")
+            parts = payload.get("parts")
+
+            if headers:
+                for header in headers:
+                    name = header.get("name")
+                    value = header.get("value")
+
+                    match name:
+                        case "From":
+                            input_message["From"] = value
+                        case "To":
+                            input_message["To"] = value
+                        case "Date":
+                            input_message["Date"] = value
+                        case "Subject":
+                            input_message["Subject"] = value
+            
+            if parts:
+                for part in parts:
+                    mimeType = part.get("mimeType")
+                    body = part.get("body")
+                    data = body.get("data")
+
+                    if mimeType == 'text/plain' and data:
+                        input_message.set_content(data)
+                        break
         
-        new_message = Message()
+        except HttpError as error:
+            logger.exception(f"An error occurred: {error}")
+            input_message = None
 
-        payload = result["payload"]
-        headers = payload.get("headers")
-        parts = payload.get("parts")
-
-        if headers:
-            for header in headers:
-                name = header.get("name")
-                value = header.get("value")
-
-                match name:
-                    case "From":
-                        new_message.set_sender(value)
-                    case "Date":
-                        new_message.set_date(value)
-                    case "Subject":
-                        new_message.set_subject(value)
-        
-        if parts:
-            for part in parts:
-                mimeType = part.get("mimeType")
-                body = part.get("body")
-                data = body.get("data")
-
-                if mimeType == 'text/plain' and data:
-                    text_content = urlsafe_b64decode(data).decode()
-                    new_message.text = text_content
-                    break
-
-        return new_message
+        return input_message
     
     @classmethod
     def mark_as_read(cls, service, messages):
@@ -103,3 +112,31 @@ class Gmail:
                                                    'ids': [m['id'] for m in messages],
                                                    'removeLabelIds': ['UNREAD']
                                                    }).execute()
+    
+    @classmethod
+    def send_message(cls, service, sender, recipient, subject, content):
+        try:
+            message = EmailMessage()
+
+            message.set_content(content)
+
+            message["To"] = recipient
+            message["From"] = sender
+            message["Subject"] = subject
+
+            # encoded message
+            encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+            create_message = {"raw": encoded_message}
+            send_message = (
+                service.users()
+                .messages()
+                .send(userId="me", body=create_message)
+                .execute()
+            )
+        
+        except HttpError as error:
+            logger.exception(f"An error occurred: {error}")
+            send_message = None
+        
+        return send_message

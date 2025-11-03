@@ -2,7 +2,9 @@ import json
 
 from graphs.state import OverallState
 from chains.extract_request_fields import extract_request_fields
-from utils import extract_json_from_string
+from utils import extract_json_from_string, get_logger
+
+logger = get_logger(__name__)
 
 def fill_request_fields(state: OverallState) -> OverallState:
     email = state.email
@@ -10,10 +12,10 @@ def fill_request_fields(state: OverallState) -> OverallState:
 
     fields_json = [field.model_dump_json(indent=2) for field in fields]
 
-    request_fields_json = extract_json_from_string(extract_request_fields(email.get_text(), fields_json))
+    request_fields_json = extract_json_from_string(extract_request_fields(email.get_content(), fields_json))
 
     field_values = json.loads(request_fields_json)
 
-    print(f"Filled request fields: {field_values}")
+    logger.debug(f"Filled request fields: {field_values}")
 
     return {"request_field_values": field_values}

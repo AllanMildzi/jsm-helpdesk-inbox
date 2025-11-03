@@ -3,9 +3,10 @@ import json
 import base64
 
 from core import Config
-from models.request_type import RequestType
-from models.request_field import RequestField
-from models.request_body import RequestBody
+from models import RequestBody, RequestField, RequestType
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 class ServiceDesk:
     REST_CLIENT = None
@@ -31,7 +32,15 @@ class ServiceDesk:
             headers=headers
         )
 
-        print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        try:
+            data = response.json()
+        except ValueError:
+            raise RuntimeError("Failed to decode JSON response")
+
+        if response.status_code != 200:
+            raise RuntimeError(f"Error code {response.status_code}: {data.get('message', data)}")
+        
+        return data
     
     @classmethod
     def create_request(cls, request_body: RequestBody):
@@ -60,7 +69,7 @@ class ServiceDesk:
         if response.status_code != 201:
             raise RuntimeError(f"Error code {response.status_code}: {data.get('message', data)}")
 
-        print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        return data
     
     @classmethod
     def get_request_types(cls):
