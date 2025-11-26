@@ -109,7 +109,7 @@ class Gmail:
     def mark_as_read(cls, service, messages):
         service.users().messages().batchModify(userId='me',
                                                body={
-                                                   'ids': [m['id'] for m in messages],
+                                                   'ids': [msg['id'] for msg in messages],
                                                    'removeLabelIds': ['UNREAD']
                                                    }).execute()
     

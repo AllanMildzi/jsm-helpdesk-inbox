@@ -75,7 +75,7 @@ class EmailListener:
 
         while self.running:
             try:
-                message = self.message_queue.get(block=True, timeout=1.0)
+                message = self.message_queue.get(block=True, timeout=QUEUE_TIMEOUT)
             except queue.Empty:
                 continue
 

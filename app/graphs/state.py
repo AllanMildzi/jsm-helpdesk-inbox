@@ -25,6 +25,7 @@ class OverallState(BaseModel):
         default=None,
         description="Output object received after request is created")
     
+    # Allow to work with arbitrary classes such as EmailMessage from the email library
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 class OutputState(BaseModel):
@@ -32,5 +33,6 @@ class OutputState(BaseModel):
         default=None,
         description="Email message")
     
+    # Same as above
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
