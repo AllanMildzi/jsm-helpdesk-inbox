@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    secrets:
+      - gmail_credentials
+
+secrets:
+  gmail_credentials:
+    file: ./credentials.json

@@ -1,10 +1,10 @@
-import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
 from utils import get_logger
 from imap_client import EmailListener
 from core import Config
+from gmail import Gmail
 
 logger = get_logger(__name__)
 
@@ -21,5 +21,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host=Config.SERVER_HOST, port=Config.SERVER_PORT)
+@app.get("/authenticate")
+async def root():
+    Gmail.generate_token()
+    
+    return {"message": "Token generated"}

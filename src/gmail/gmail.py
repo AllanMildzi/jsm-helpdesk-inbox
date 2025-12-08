@@ -46,6 +46,21 @@ class Gmail:
             logger.exception(f"An error occurred: {error}")
     
     @classmethod
+    def generate_token(cls):
+        TOKEN_PATH = Config.TOKEN_PATH
+        CREDENTIALS_PATH = Config.CREDENTIALS_PATH
+        SCOPES = Config.SCOPES
+
+        flow = InstalledAppFlow.from_client_secrets_file(
+            str(CREDENTIALS_PATH), SCOPES
+        )
+        creds = flow.run_local_server(port=0)
+
+        # Save the credentials for the next run
+        with open(TOKEN_PATH, "w") as token:
+            token.write(creds.to_json())
+    
+    @classmethod
     def search_messages(cls, service, max_results, query):
         result = service.users().messages().list(userId='me', 
                                                  maxResults=max_results,

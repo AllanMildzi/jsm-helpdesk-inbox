@@ -8,7 +8,7 @@ load_dotenv(dotenv_path=env_path, override=False)
 
 class Config:
     SERVER_HOST = os.getenv("SERVER_HOST")
-    SERVER_PORT = int(os.getenv("SERVER_PORT"))
+    SERVER_PORT = os.getenv("SERVER_PORT")
     
     IMAP_HOST = os.getenv("IMAP_HOST")
     USERNAME = os.getenv("USERNAME")
