@@ -10,4 +10,4 @@ services:
 
 secrets:
   gmail_credentials:
-    file: ./credentials.json
+    file: credentials.json
