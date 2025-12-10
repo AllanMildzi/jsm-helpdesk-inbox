@@ -9,6 +9,7 @@ dist/
 tests/
 .venv/
 logs/
+.pytest_cache/
 
 *.md
 *.log
