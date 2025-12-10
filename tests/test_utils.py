@@ -1,4 +1,4 @@
-from utils import extract_json_from_string
+from src.utils import extract_json_from_string
 
 def test_extract_json_from_string():
     # Test case 1: Valid JSON string
