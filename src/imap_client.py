@@ -1,6 +1,7 @@
 import time
 import threading
 import queue
+from imapclient import IMAPClient
 
 from core.constants import *
 from gmail import Gmail
@@ -16,14 +17,15 @@ class EmailListener:
         self.password = password
         
         self.mailbox = MAILBOX
-        self.check_interval = CHECK_INTERVAL
         self.running = False
 
         self.message_queue = queue.Queue(maxsize=QUEUE_MAX_LENGTH)
         self.consumer_threads = []
-
+    
     def _imap_listener(self):
-        logger.info("IMAP IDLE listening for new mail.")
+        server = IMAPClient(self.host, use_uid=True, ssl=True)
+        server.login(self.username, self.password)
+        server.select_folder("INBOX")
 
         # Gmail authentication
         service = Gmail.authenticate()
@@ -32,35 +34,49 @@ class EmailListener:
         self.running = True
 
         while self.running:
+            self._process_unread_messages(service)
+            time.sleep(CHECK_INTERVAL)
+
+            if self.message_queue.empty():
+                break
+
+        server.idle()
+        logger.info("IMAP IDLE listening for new mail.")
+
+        while self.running:
             try:
-                if not self.message_queue.full():
-                    results = Gmail.search_messages(service, 
-                                                    QUEUE_MAX_LENGTH - self.message_queue.qsize(), 
-                                                    SEARCH_QUERY)
-                
-                    if results:
-                        logger.debug(f"Found {len(results)} results.")
-                        #Gmail.mark_as_read(service, results)
-
-                        for msg in results:
-                            try:
-                                self.message_queue.put(msg)
-                            except queue.Full:
-                                break
-                    
+                responses = server.idle_check(timeout=CHECK_INTERVAL)
+                if responses:
+                    logger.info("New message detected.")
+                    if not self.message_queue.full():
+                        self._process_unread_messages(service)
                     else:
-                        logger.debug("Server sent nothing")
+                        logger.debug("Queue is full")
                 else:
-                    logger.debug("Queue is full")
+                    logger.debug("No new messages.")
 
-                time.sleep(CHECK_INTERVAL)
-            
             except Exception as e:
                 logger.exception(f"IMAP error: {e}. Retrying in 10s.")
                 time.sleep(RETRYING_TIME)
-            
+
         self.running = False
+        server.logout()
     
+    def _process_unread_messages(self, service):
+        results = Gmail.search_messages(service, QUEUE_MAX_LENGTH, SEARCH_QUERY)
+        
+        if results:
+            logger.debug(f"Found {len(results)} unread messages.")
+            Gmail.mark_as_read(service, results)
+
+            for msg in results:
+                try:
+                    self.message_queue.put(msg)
+                except queue.Full:
+                    break
+        else:
+            logger.debug("No unread messages found.")
+
     def _start_consumers(self):
         for _ in range(POOL_MAX_LENGTH):
             consumer_thread = threading.Thread(target=self._email_consumer, daemon=True)

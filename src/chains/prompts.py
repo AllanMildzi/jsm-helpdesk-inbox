@@ -16,6 +16,6 @@ SYSTEM_PROMPTS = {
     For the values, if validValues is an empty list, extract it from the email.
     Otherwise, choose the most appropriate value from validValues as a JSON object.
     If you can't determine a value, select the first valid value.
-    Don't put keys with null or None or empty values.
+    Don't include the `attachment` key.
     """
 }
