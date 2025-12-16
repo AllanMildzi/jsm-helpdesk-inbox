@@ -67,7 +67,7 @@ class EmailListener:
         
         if results:
             logger.debug(f"Found {len(results)} unread messages.")
-            Gmail.mark_as_read(service, results)
+            # Gmail.mark_as_read(service, results)
 
             for msg in results:
                 try:

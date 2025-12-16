@@ -13,8 +13,9 @@ SYSTEM_PROMPTS = {
     Fill the following form fields based on the following user's email.
     Requests Fields: {request_fields}
     Return valid JSON with the value of each fieldId as keys.
-    For the values, if validValues is an empty list, extract it from the email.
-    Otherwise, choose the most appropriate value from validValues as a JSON object.
+
+    For the fieldIds that have an empty validValues list, extract the value from the email.
+    For the fieldIds that have a non-empty validValues list (components and customfield_xxxxx), select the most appropriate label, not the value.
     If you can't determine a value, select the first valid value.
     Don't include the `attachment` key.
     """

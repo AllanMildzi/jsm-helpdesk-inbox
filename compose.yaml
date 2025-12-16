@@ -1,13 +1,10 @@
 services:
   web:
     build: .
+    container_name: jsm-helpdesk-inbox
     ports:
       - "8080:8080"
     env_file:
       - .env
-    secrets:
-      - gmail_credentials
-
-secrets:
-  gmail_credentials:
-    file: credentials.json
+    volumes:
+      - ./token.json:/app/token.json

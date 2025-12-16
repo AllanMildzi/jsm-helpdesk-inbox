@@ -23,6 +23,4 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/authenticate")
 async def root():
-    Gmail.generate_token()
-    
     return {"message": "Token generated"}
