@@ -6,6 +6,7 @@ SYSTEM_PROMPTS = {
 
     Which request type best matches the following user's email? 
     Return only the type id.
+    If you can't determine the request type, return -1.
     """,
 
     "Determine request fields":
@@ -18,5 +19,8 @@ SYSTEM_PROMPTS = {
     For the fieldIds that have a non-empty validValues list (components and customfield_xxxxx), select the most appropriate label, not the value.
     If you can't determine a value, select the first valid value.
     Don't include the `attachment` key.
+    
+    If you can't extract any fields, return an empty JSON object: {{}}
+    If there are missing fields, return those fields only.
     """
 }

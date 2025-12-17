@@ -100,7 +100,13 @@ class EmailListener:
                 message_object = Gmail.read_message(service, message)
 
                 graph = build_graph()
-                graph.invoke({"email": message_object}, context={"gmail_service": service})
+                state = graph.invoke({"email": message_object}, context={"gmail_service": service})
+
+                Gmail.send_message(service,
+                       sender=state.email["To"],
+                       recipient=state.email["From"],
+                       subject=f"Follow up of you request: {state.email["Subject"]}",
+                       content="Your request has been processed.")
             
             except Exception as e:
                 logger.exception(f"Error in consumer thread: {e}")

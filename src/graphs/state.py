@@ -27,12 +27,3 @@ class OverallState(BaseModel):
     
     # Allow to work with arbitrary classes such as EmailMessage from the email library
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
-class OutputState(BaseModel):
-    email: Optional[EmailMessage] = Field(
-        default=None,
-        description="Email message")
-    
-    # Same as above
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    
